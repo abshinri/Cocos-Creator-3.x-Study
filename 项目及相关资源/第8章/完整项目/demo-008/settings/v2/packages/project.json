@@ -1,0 +1,9 @@
+{
+  "physics": {
+    "defaultMaterial": {
+      "restitution": 1,
+      "friction": 0.5,
+      "spinningFriction": 0.1
+    }
+  }
+}
