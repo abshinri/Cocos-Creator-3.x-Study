@@ -11,6 +11,8 @@ import {
   Collider2D,
   Contact2DType,
   Prefab,
+  Label,
+  Director,
 } from "cc";
 const { ccclass, property } = _decorator;
 
@@ -23,7 +25,10 @@ export class Game extends Component {
   @property({ type: Node })
   private blocksNode: Node = null;
   private blockGap: number = 250; // 每个方块之间的间隔
+  @property({ type: Label })
+  private scoreLabel: Label = null;
 
+  private score: number = 0; // 记录分数
   private bounceSpeed: number = 0; // 记录球第一次的起跳速度,以后每次起跳都是这个速度
   private gameState: number = 0; // 0:未开始 1:进行中 2:结束
   // 点击屏幕
@@ -52,6 +57,8 @@ export class Game extends Component {
         } else {
           ballRigidBody.linearVelocity = new Vec2(0, this.bounceSpeed);
         }
+        this.score += 1;
+        this.scoreLabel.string = `分数: ${this.score}`;
       },
       this
     );
@@ -92,8 +99,17 @@ export class Game extends Component {
   checkBlockOut(blockNode) {
     if (blockNode.position.x < -400) {
       const nextPosX = this.getLastBlockPosX() + this.blockGap;
-      this.createNewBlock(new Vec3(nextPosX, 0, 0));
-      blockNode.destroy();
+      // 生成-10到10之间的随机数
+      const random = Math.random() * 20 - 10;
+      blockNode.position = new Vec3(nextPosX, random, 0);
+    }
+    // 球超出屏幕
+    if (this.ballNode.position.y < -700) {
+      this.gameState = 2;
+      this.scoreLabel.string = `游戏结束,分数: ${this.score}`;
+      setTimeout(() => {
+        Director.instance.loadScene("Game");
+      }, 1000);
     }
   }
 
@@ -127,7 +143,7 @@ export class Game extends Component {
   update(deltaTime: number) {
     if (this.gameState == 1) {
       this.moveAllBlock(deltaTime);
-      this.checkBallOut()
+      this.checkBallOut();
     }
   }
 }
