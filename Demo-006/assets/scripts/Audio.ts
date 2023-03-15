@@ -7,13 +7,13 @@ const { ccclass, property } = _decorator;
 @ccclass("Audio")
 export class Audio extends Component {
   @property({ type: AudioClip })
-  public clickAudio: AudioClip = null;
+  private clickAudio: AudioClip = null;
   
   private audioSource: AudioSource = null;
 
-  private playAudio() {
+  public playAudio() {
     // 播放音效
-    this.audioSource.playOneShot(this.clickAudio), 1;
+    this.audioSource.playOneShot(this.clickAudio, 1);
   }
 
   onLoad() {

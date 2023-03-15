@@ -14,6 +14,7 @@ const { ccclass, property } = _decorator;
 
 // 获取预制体绑定的脚本
 import { Block } from "./Block";
+import { Audio } from "./Audio";
 
 @ccclass("Game")
 export class Game extends Component {
@@ -21,6 +22,9 @@ export class Game extends Component {
   private blockPrefab: Prefab = null; // 绑定block预制体
   @property({ type: Node })
   private bgNode: Node = null; // 绑定bg节点
+  @property({ type: Node })
+  private audioNode: Node = null; // 绑定audio节点
+  private audioScript: any = null; // 绑定audio脚本
 
   private blockRowNum: number = 3; // 每行的砖块数量
   private picNodeArr: Array<Node[]> = []; // 存储所有的砖块节点
@@ -132,6 +136,7 @@ export class Game extends Component {
       }
       // 判断这个随机的临近位置是否是空的
       if (this.picNodeArr[nextPosition.x][nextPosition.y] === this.holeNode) {
+        this.audioScript.playAudio();
         // 交换两个砖块的位置
         this.swapBlockByPosition(blockPosition, nextPosition);
 
@@ -210,7 +215,10 @@ export class Game extends Component {
   }
 
   start() {
+    // 加载图片
     this.loadPicture();
+    //  绑定音乐控制器脚本
+    this.audioScript = this.audioNode.getComponent("Audio") as Audio;
     director.on("clickPicBlock", this.handleBlockClick, this);
   }
 
