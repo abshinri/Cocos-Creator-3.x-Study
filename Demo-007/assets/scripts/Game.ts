@@ -1,5 +1,5 @@
 /** 核心游戏逻辑脚本 */
-import { _decorator, Component, Node, Label } from "cc";
+import { _decorator, Component, Node, Label, Animation } from "cc";
 const { ccclass, property } = _decorator;
 
 @ccclass("Game")
@@ -21,6 +21,12 @@ export class Game extends Component {
   private enemyHp: number = 0; // 敌人当前生命值
 
   private roundType: number = 0; // 当前回合类型, 0: 玩家回合, 1: 敌人回合
+
+  @property({ type: Animation })
+  private bgAni: Animation = null; // 背景动画
+
+  @property({ type: Node })
+  private nextLevelBtn: Node = null; // 进入下一关按钮
 
   @property({ type: Node })
   private enemyAreaNode: Node = null; // 敌人区域节点
@@ -68,6 +74,38 @@ export class Game extends Component {
 
   private handleEnemyDead() {
     this.enemyAreaNode.active = false;
+    this.nextLevelBtn.active = true;
+    this.roundType = 0;
+  }
+
+  /**
+   * 进入下一关
+   */
+  private nextLevel() {
+    this.nextLevelBtn.active = false;
+    // 清空动画
+    this.enemyAreaNode.getComponent(Animation).stop();
+    // 播放进场动画
+    this.bgAni.play("interlude");
+  }
+
+  /**
+   * 入场动画播放结束的回调
+   */
+  private handleBgAniFinished() {
+    console.log("进入下一关");
+    this.initEnemy();
+
+    this.updatePlayerAp(this.playerMaxAp);
+    this.roundType = 0;
+  }
+
+  /**
+   * 控制敌人攻击的逻辑
+   */
+  private handleEnemyAttack() {
+    this.enemyAreaNode.getComponent(Animation).play("attack");
+    this.updatePlayerHp(this.playerHp - this.enemyAttack);
   }
 
   /**
@@ -152,6 +190,7 @@ export class Game extends Component {
     this.updatePlayerMp(this.playerMp + this.playerMpRecoverSpeed);
     // 敌人回合
     this.roundType = 1;
+    this.handleEnemyAttack();
   }
 
   /**
@@ -164,6 +203,7 @@ export class Game extends Component {
 
     // 扣除敌人HP
     this.updateEnemyHp(this.enemyHp - this.playerAttack);
+    this.enemyAreaNode.getComponent(Animation).play("hurt");
 
     this.handlePlayerActionEnd();
   }
@@ -188,6 +228,16 @@ export class Game extends Component {
   start() {
     this.initEnemy();
     this.initPlayer();
+
+    // 监听背景动画的结束事件
+    this.bgAni.on(Animation.EventType.FINISHED, this.handleBgAniFinished, this);
+    // 监听敌人动画的结束事件
+    this.enemyAreaNode
+      .getComponent(Animation)
+      .on(Animation.EventType.FINISHED, () => {
+        // 敌人攻击结束, 进入玩家回合
+        this.roundType = 0;
+      });
   }
 
   update(deltaTime: number) {}
